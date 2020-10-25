@@ -47,8 +47,8 @@ theme.
 oh-my-posh -config sample.json -shell universal
 ```
 
-If all goes according to plan, you should see the prompt being printed out on the line below. In case you see a lot of boxes with
-question marks, [set up your terminal][setupterm] to use a supported font before continuing.
+If all goes according to plan, you should see the prompt being printed out on the line below. In case you see a lot of boxes
+with question marks, [set up your terminal][setupterm] to use a supported font before continuing.
 
 ## General Settings
 
