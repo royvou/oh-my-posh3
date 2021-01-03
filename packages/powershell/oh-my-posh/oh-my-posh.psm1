@@ -28,7 +28,7 @@ function Set-PoshContext {}
 
 function Set-GitStatus {
     if (Get-Command -Name "Get-GitStatus" -ErrorAction SilentlyContinue) {
-        [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSProvideCommentHelp', '', Justification='Variable used later(not in this scope)')]
+        [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSProvideCommentHelp', '', Justification = 'Variable used later(not in this scope)')]
         $Global:GitStatus = Get-GitStatus
     }
 }
@@ -73,31 +73,27 @@ function Set-PoshPrompt {
             $executionTime = ($history.EndExecutionTime - $history.StartExecutionTime).TotalMilliseconds
         }
 
-        $startInfo = New-Object System.Diagnostics.ProcessStartInfo
-        $startInfo.FileName = Get-PoshCommand
-        $config = $global:PoshSettings.Theme
-        $cleanPWD = $PWD.ProviderPath.TrimEnd("\")
-        $startInfo.Arguments = "--config=""$config"" --error=$errorCode --pwd=""$cleanPWD"" --execution-time=$executionTime"
-        $startInfo.Environment["TERM"] = "xterm-256color"
-        $startInfo.CreateNoWindow = $true
-        $startInfo.StandardOutputEncoding = [System.Text.Encoding]::UTF8
-        $startInfo.RedirectStandardOutput = $true
-        $startInfo.UseShellExecute = $false
-        if ($PWD.Provider.Name -eq 'FileSystem') {
-            $startInfo.WorkingDirectory = $PWD.ProviderPath
+        if ($null -eq $global:ohmyposhnamedPipe ) {
+            $global:ohmyposhnamedPipe = new-object System.IO.Pipes.NamedPipeClientStream('.', 'ohmyposh', [System.IO.Pipes.PipeDirection]::InOut)
         }
-        $process = New-Object System.Diagnostics.Process
-        $process.StartInfo = $startInfo
-        $process.Start() | Out-Null
-        $standardOut = $process.StandardOutput.ReadToEnd()
-        $process.WaitForExit()
+
+        if (-not $Global:ohmyposhnamedPipe.Connected) {
+            $Global:ohmyposhnamedPipe.Connect()
+            $Global:pipeWriter = new-object System.IO.StreamWriter($Global:ohmyposhnamedPipe )
+            $Global:pipeReader = new-object System.IO.StreamReader($Global:ohmyposhnamedPipe )
+        }
+
+        $pipeWriter.Write($PWD.Path)
+        $pipeWriter.Flush();
+        $standardOut = $pipeReader.ReadLine();
         $standardOut
-        Set-GitStatus
+        #Set-GitStatus
         $global:LASTEXITCODE = $realLASTEXITCODE
         #remove temp variables
         Remove-Variable realLASTEXITCODE -Confirm:$false
         Remove-Variable lastCommandSuccess -Confirm:$false
     }
+
     Set-Item -Path Function:prompt -Value $Prompt -Force
 }
 
@@ -154,8 +150,8 @@ function ThemeCompletion {
         $fakeBoundParameter
     )
     $themes = Get-ChildItem -Path "$PSScriptRoot\themes\*" -Include '*.omp.json' | Sort-Object Name | Select-Object -Property @{
-        label='BaseName'
-        expression={$_.BaseName.TrimEnd(".omp")}
+        label      = 'BaseName'
+        expression = { $_.BaseName.TrimEnd(".omp") }
     }
     $themes |
     Where-Object { $_.BaseName.ToLower().StartsWith($wordToComplete.ToLower()); } |

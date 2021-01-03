@@ -3,13 +3,17 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"flag"
 	"fmt"
+	"net"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/Microsoft/go-winio"
 )
 
 // Version number of oh-my-posh
@@ -38,6 +42,7 @@ type args struct {
 	Eval          *bool
 	Init          *bool
 	PrintInit     *bool
+	Server        *bool
 }
 
 func main() {
@@ -94,6 +99,10 @@ func main() {
 			"print-init",
 			false,
 			"Print the shell initialization script"),
+		Server: flag.Bool(
+			"server",
+			false,
+			"Runs in server mode"),
 	}
 	flag.Parse()
 	env := &environment{
@@ -156,7 +165,34 @@ func main() {
 		engine.debug()
 		return
 	}
+
+	if *args.Server {
+		namedPipe, _ := winio.ListenPipe(`\\.\pipe\ohmyposh`, nil)
+
+		for true {
+			conn, _ := namedPipe.Accept()
+			engine.connection = conn
+
+			processConnection(engine, conn)
+		}
+
+	}
+
 	engine.render()
+}
+
+func processConnection(engine *engine, conn net.Conn) {
+	//	for true {
+
+	reader := bufio.NewReader(conn)
+	reader.ReadByte() //.ReadString('\n')
+	// pwdString := string(pwd)
+	// env.args.PWD = &pwdString
+	engine.render()
+
+	engine.renderer.buffer.Reset()
+	conn.Close()
+	//}
 }
 
 func initShell(shell, config string) string {

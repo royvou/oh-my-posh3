@@ -32,6 +32,17 @@
       ]
     },
     {
+      "name": "Server debug",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      "program": "${workspaceRoot}/src",
+      "args": [
+        "--server",
+        "--config=${workspaceRoot}/themes/jandedobbeleer.omp.json"
+      ]
+    },
+    {
       "name": "Print init pwsh",
       "type": "go",
       "request": "launch",

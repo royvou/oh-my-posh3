@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"net"
 	"sync"
 	"time"
 )
@@ -16,6 +17,7 @@ type engine struct {
 	activeSegment         *Segment
 	previousActiveSegment *Segment
 	rprompt               string
+	connection            net.Conn
 }
 
 type SegmentTiming struct {
@@ -236,7 +238,12 @@ func (e *engine) write() {
 			e.renderer.restoreCursorPosition()
 		}
 	}
-	fmt.Print(e.renderer.string())
+
+	if e.connection != nil {
+		e.connection.Write([]byte(e.renderer.string()))
+	} else {
+		fmt.Print(e.renderer.string())
+	}
 }
 
 func (e *engine) resetBlock() {

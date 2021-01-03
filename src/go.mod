@@ -3,6 +3,7 @@ module github.com/jandedobbeleer/oh-my-posh3
 go 1.15
 
 require (
+	github.com/Microsoft/go-winio v0.4.16
 	github.com/StackExchange/wmi v0.0.0-20190523213315-cbe66965904d // indirect
 	github.com/alecthomas/assert v0.0.0-20170929043011-405dbfeb8e38
 	github.com/alecthomas/colour v0.1.0 // indirect
